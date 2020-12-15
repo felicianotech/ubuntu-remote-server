@@ -1,0 +1,1 @@
+# Ubuntu Remote (server) [![CI Status](https://circleci.com/gh/felicianotech/ubuntu-remote-server.svg?style=shield)](https://app.circleci.com/pipelines/github/felicianotech/ubuntu-remote-server) [![Software License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/felicianotech/ubuntu-remote-server/master/LICENSE)

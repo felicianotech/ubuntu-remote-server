@@ -1,0 +1,95 @@
+version: 2.1
+
+orbs:
+  gor: hubci/goreleaser@1.0
+  osd: circleci/os-detect@0.3
+
+executors:
+  linux-docker:
+    docker:
+      - image: cimg/base:2020.12
+  linux-amd64:
+    machine:
+      image: ubuntu-2004:202010-01
+  linux-arm64:
+    machine:
+      image: ubuntu-2004:202011-01
+    resource_class: arm.medium
+
+workflows:
+  main:
+    jobs:
+      - unit-tests
+      - gor/release:
+          version: "0.149.0"
+          go-version: "1.15.6"
+          dry-run: true
+          post-steps:
+            - persist_to_workspace:
+                root: "."
+                paths:
+                  - "dist"
+      - test-with-images:
+          requires:
+            - gor/release
+          matrix:
+            parameters:
+              image:
+                - linux-docker
+                - linux-amd64
+                - linux-arm64
+  release:
+    jobs:
+      - unit-tests:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              # Simplified SemVer regex
+              only: /^v\d+\.\d+\.\d+$/
+      - gor/release:
+          version: "0.149.0"
+          go-version: "1.15.6"
+          post-steps:
+            - persist_to_workspace:
+                root: "."
+                paths:
+                  - "dist"
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              # Simplified SemVer regex
+              only: /^v\d+\.\d+\.\d+$/
+          context: main
+
+jobs:
+  unit-tests:
+    docker:
+      - image: cimg/go:1.15.6
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1
+      - run:
+          name: "Download Dependancies"
+          command: go mod download
+      - run:
+          name: "Run Tests"
+          command: gotestsum ./...
+      - save_cache:
+          key: go-mod-v1
+          paths:
+            - "/go/pkg/mod"
+  test-with-images:
+    parameters:
+      image:
+        type: executor
+    executor: <<parameters.image>>
+    steps:
+      - osd/init
+      - attach_workspace:
+          at: .
+      - run: |
+          ./dist/ubuntu-remote-server_linux_$(dpkg --print-architecture)/ubuntu-remote-server version

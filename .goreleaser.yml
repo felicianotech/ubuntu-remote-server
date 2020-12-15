@@ -1,0 +1,33 @@
+project_name: ubuntu-remote-server
+
+builds:
+  - goos:
+      - linux
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 7
+    ldflags:
+      - -s -w -X github.com/felicianotech/ubuntu-remote-server/cmd.version={{ .Version }} -extldflags "-static"
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}"
+    files:
+      - LICENSE
+      - README.md
+
+nfpms:
+  - file_name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}"
+    homepage: "https://www.Feliciano.Tech"
+    maintainer: "Ricardo N Feliciano <Ricardo@Feliciano.Tech>"
+    description: "A remote controller for Ubuntu."
+    license: MIT
+    formats:
+      - deb
+    bindir: /usr/bin
+
+checksum:
+  name_template: "{{ .ProjectName }}-v{{ .Version }}-checksums.txt"
